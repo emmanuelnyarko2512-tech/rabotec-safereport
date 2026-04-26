@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rabotec SafeReport — HSE Hazard Reporting</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+
+:root {
+  --blue:      #003DA5;
+  --blue-dark: #002880;
+  --blue-mid:  #1a52b8;
+  --red:       #D0021B;
+  --red-dark:  #a50015;
+  --off-white: #f4f6fa;
+  --g100: #eef1f7;
+  --g200: #dde2ed;
+  --g400: #8a96b0;
+  --g600: #4a5568;
+  --g800: #1a202c;
+  --green:  #0a7c3e;
+  --amber:  #d97706;
+  --shadow:    0 4px 24px rgba(0,61,165,.10);
+  --shadow-sm: 0 2px 8px  rgba(0,61,165,.08);
+  --r: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--off-white);
+  color: var(--g800);
+  min-height: 100vh;
+}
+
+/* ── HEADER ─────────────────────────────── */
+header {
+  background: var(--blue);
+  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+  position: sticky; top: 0; z-index: 100;
+}
+.hdr {
+  max-width: 980px; margin: 0 auto;
+  display: flex; align-items: stretch; min-height: 64px;
+}
+.logo-block {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 20px 10px 16px;
+  border-right: 1px solid rgba(255,255,255,.15);
+}
+.logo-svg { width: 44px; height: 44px; flex-shrink: 0; }
+.brand { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: 1.4rem; letter-spacing: .03em; color: #fff;
+}
+.brand-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 400; font-size: .72rem; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(255,255,255,.6);
+}
+.hdr-title {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px; flex: 1;
+}
+.hdr-title span {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 1.15rem; letter-spacing: .06em;
+  text-transform: uppercase; color: rgba(255,255,255,.9);
+}
+.red-badge {
+  background: var(--red); color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: .68rem; letter-spacing: .1em;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 3px;
+}
+.hdr-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 18px; font-size: .75rem;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,.3);
+  transition: background .3s;
+}
+.dot.off { background: var(--red); box-shadow: 0 0 0 2px rgba(208,2,27,.3); }
+.dot-label { color: rgba(255,255,255,.65); }
+
+/* ── NAV ─────────────────────────────────── */
+nav { background: var(--blue-dark); border-bottom: 3px solid var(--red); }
+.nav { max-width: 980px; margin: 0 auto; display: flex; }
+.nb {
+  background: none; border: none;
+  color: rgba(255,255,255,.6);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600; font-size: .82rem; letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 12px 22px; cursor: pointer;
+  transition: all .2s;
+  border-bottom: 3px solid transparent; margin-bottom: -3px;
+}
+.nb:hover { color: #fff; background: rgba(255,255,255,.06); }
+.nb.active { color: #fff; border-bottom-color: var(--red); background: rgba(255,255,255,.08); }
+.nbadge {
+  background: var(--red); color: #fff;
+  border-radius: 10px; padding: 1px 6px;
+  font-size: .65rem; margin-left: 6px; vertical-align: middle;
+}
+
+/* ── MAIN ────────────────────────────────── */
+main { max-width: 980px; margin: 0 auto; padding: 28px 16px 72px; }
+.tab { display: none; }
+.tab.active { display: block; }
+
+/* ── OUTBOX BANNER ───────────────────────── */
+#outbox-banner {
+  display: none; align-items: center; gap: 10px;
+  background: linear-gradient(90deg,#7c3400,var(--amber));
+  color: #fff; padding: 10px 16px; border-radius: 7px;
+  margin-bottom: 18px; font-size: .85rem; font-weight: 600;
+}
+#outbox-banner.show { display: flex; }
+.sync-btn {
+  margin-left: auto; background: rgba(255,255,255,.2);
+  color: #fff; border: none; border-radius: 5px;
+  padding: 5px 12px; font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: .78rem; letter-spacing: .06em;
+  text-transform: uppercase; cursor: pointer;
+}
+.sync-btn:hover { background: rgba(255,255,255,.32); }
+
+/* ── CARD ────────────────────────────────── */
+.card {
+  background: #fff; border-radius: var(--r);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--g200);
+  margin-bottom: 20px; overflow: hidden;
+}
+.card-hdr {
+  background: linear-gradient(90deg, var(--blue) 0%, var(--blue-mid) 100%);
+  padding: 13px 20px; display: flex; align-items: center; gap: 10px;
+}
+.card-hdr h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 1rem; letter-spacing: .08em;
+  text-transform: uppercase; color: #fff;
+}
+.card-hdr svg { opacity: .85; flex-shrink: 0; }
+.card-body { padding: 20px; }
+
+/* ── FORM LAYOUT ─────────────────────────── */
+.fg { display: grid; gap: 16px; }
+.fg2 { grid-template-columns: 1fr 1fr; }
+.fg3 { grid-template-columns: 1fr 1fr 1fr; }
+.fg1 { grid-template-columns: 1fr; }
+.f { display: flex; flex-direction: column; gap: 5px; }
+.f.s2 { grid-column: span 2; }
+.f.s3 { grid-column: span 3; }
+
+label {
+  font-size: .75rem; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--g600);
+}
+label .req { color: var(--red); margin-left: 2px; }
+
+input, select, textarea {
+  width: 100%; border: 1.5px solid var(--g200); border-radius: 6px;
+  padding: 9px 12px;
+  font-family: 'Barlow', sans-serif; font-size: .9rem; color: var(--g800);
+  background: #fff; transition: border-color .2s, box-shadow .2s; outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,61,165,.1);
+}
+textarea { resize: vertical; min-height: 88px; }
+
+/* Severity pills */
+.sev-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.sev-radio { display: none; }
+.sev-lbl {
+  padding: 7px 15px; border-radius: 5px;
+  border: 2px solid var(--g200);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: .8rem; letter-spacing: .06em;
+  text-transform: uppercase; cursor: pointer;
+  transition: all .15s; user-select: none;
+}
+.sev-lbl:hover { border-color: var(--g400); }
+#sl:checked + .sev-lbl  { background:#0a7c3e; color:#fff; border-color:transparent; }
+#sm:checked + .sev-lbl  { background:var(--amber); color:#fff; border-color:transparent; }
+#sh:checked + .sev-lbl  { background:#e65100; color:#fff; border-color:transparent; }
+#sc:checked + .sev-lbl  { background:var(--red);  color:#fff; border-color:transparent; }
+
+/* Hazard checkboxes */
+.hz-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.hz-cb { display: none; }
+.hz-lbl {
+  padding: 6px 12px; border-radius: 5px;
+  border: 1.5px solid var(--g200);
+  font-size: .82rem; font-weight: 500; cursor: pointer;
+  color: var(--g600); transition: all .15s;
+}
+.hz-lbl:hover { border-color: var(--blue); color: var(--blue); }
+.hz-cb:checked + .hz-lbl {
+  background: rgba(0,61,165,.08); border-color: var(--blue);
+  color: var(--blue); font-weight: 600;
+}
+
+/* ── BUTTONS ─────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: .9rem; letter-spacing: .08em;
+  text-transform: uppercase; cursor: pointer; border: none;
+  transition: all .18s;
+}
+.btn-primary { background: var(--blue); color: #fff; box-shadow: 0 3px 10px rgba(0,61,165,.25); }
+.btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-danger  { background: var(--red); color: #fff; }
+.btn-danger:hover { background: var(--red-dark); }
+.btn-outline { background: #fff; color: var(--blue); border: 1.5px solid var(--blue); }
+.btn-outline:hover { background: rgba(0,61,165,.05); }
+.btn-ghost   { background: none; color: var(--g600); border: 1.5px solid var(--g200); }
+.btn-ghost:hover { border-color: var(--g400); color: var(--g800); }
+.btn-sm { padding: 6px 14px; font-size: .78rem; }
+
+.form-actions { display: flex; gap: 12px; align-items: center; padding-top: 8px; flex-wrap: wrap; }
+#submit-status { font-size: .82rem; color: var(--g400); }
+
+/* ── TOAST ───────────────────────────────── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+  pointer-events: none;
+}
+.tmsg {
+  background: var(--g800); color: #fff;
+  padding: 12px 18px; border-radius: 8px;
+  font-size: .88rem; font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  display: flex; align-items: center; gap: 10px;
+  animation: tIn .3s ease; pointer-events: auto;
+  min-width: 240px; max-width: 360px;
+}
+.tmsg.success { border-left: 4px solid #22c55e; }
+.tmsg.error   { border-left: 4px solid var(--red); }
+.tmsg.warning { border-left: 4px solid var(--amber); }
+.tmsg.info    { border-left: 4px solid var(--blue); }
+@keyframes tIn  { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+@keyframes tOut { to   { opacity:0; transform:translateX(10px); } }
+
+/* ── RECORDS ─────────────────────────────── */
+.rec {
+  border: 1.5px solid var(--g200); border-radius: var(--r);
+  margin-bottom: 14px; overflow: hidden; background: #fff;
+  transition: box-shadow .2s;
+}
+.rec:hover { box-shadow: var(--shadow); }
+.rec-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; background: var(--g100);
+  border-bottom: 1px solid var(--g200); flex-wrap: wrap;
+}
+.sev-badge {
+  padding: 3px 10px; border-radius: 4px; color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: .72rem; letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.sev-badge.low      { background: var(--green); }
+.sev-badge.medium   { background: var(--amber); }
+.sev-badge.high     { background: #e65100; }
+.sev-badge.critical { background: var(--red); }
+.rec-id { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:.8rem; color:var(--g400); letter-spacing:.06em; }
+.rec-ts { font-size:.78rem; color:var(--g400); margin-left:auto; }
+.rec-body { padding: 14px 16px; }
+.rf {
+  display: grid; grid-template-columns: 140px 1fr;
+  gap: 4px 12px; font-size: .85rem; margin-bottom: 6px; align-items: start;
+}
+.rf-lbl { font-weight:600; color:var(--g600); font-size:.75rem; text-transform:uppercase; letter-spacing:.04em; padding-top:1px; }
+.rec-actions {
+  display: flex; gap: 8px; padding: 10px 16px;
+  background: var(--g100); border-top: 1px solid var(--g200); flex-wrap: wrap; align-items: center;
+}
+.status-sel {
+  font-size:.8rem; padding:5px 10px; border-radius:5px;
+  border:1.5px solid var(--g200); background:#fff; color:var(--g800);
+  cursor:pointer; font-family:'Barlow',sans-serif;
+}
+
+/* Status chips */
+.sc { display:inline-block; padding:2px 9px; border-radius:12px; font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+.sc.open        { background:rgba(0,61,165,.12); color:var(--blue); }
+.sc.in-progress { background:rgba(217,119,6,.12); color:var(--amber); }
+.sc.resolved    { background:rgba(10,124,62,.12); color:var(--green); }
+.sc.closed      { background:var(--g100); color:var(--g600); }
+
+/* ── ADMIN LOGIN ─────────────────────────── */
+.login-wrap { max-width:400px; margin:40px auto; }
+.login-card { background:#fff; border-radius:10px; box-shadow:var(--shadow); border:1px solid var(--g200); overflow:hidden; }
+.login-hdr {
+  background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
+  padding: 28px 24px; text-align: center;
+}
+.login-hdr h2 {
+  font-family:'Barlow Condensed',sans-serif; font-weight:800;
+  font-size:1.5rem; letter-spacing:.06em; text-transform:uppercase;
+  color:#fff; margin-top:10px;
+}
+.login-hdr p { color:rgba(255,255,255,.6); font-size:.82rem; margin-top:4px; }
+.login-body { padding:28px 24px; }
+.login-body .f { margin-bottom:16px; }
+
+/* ── STATS ───────────────────────────────── */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.stat {
+  background:#fff; border-radius:var(--r);
+  border:1px solid var(--g200); padding:16px;
+  text-align:center; box-shadow:var(--shadow-sm);
+}
+.stat-num { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:2rem; color:var(--blue); line-height:1; }
+.stat.red .stat-num { color:var(--red); }
+.stat-lbl { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--g400); margin-top:4px; }
+
+/* ── FILTER ROW ──────────────────────────── */
+.filter-row { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.filter-row select, .filter-row input { width:auto; flex:1; min-width:120px; font-size:.85rem; padding:7px 11px; }
+
+/* ── MISC ────────────────────────────────── */
+.loading { display:flex; align-items:center; justify-content:center; gap:10px; padding:36px; color:var(--g400); font-size:.9rem; }
+.spin { width:20px; height:20px; border:2.5px solid var(--g200); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.empty { text-align:center; padding:48px 20px; color:var(--g400); }
+.empty svg { opacity:.3; margin-bottom:12px; }
+.empty p { font-size:.9rem; }
+.admin-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+.admin-topbar h2 { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:1.4rem; letter-spacing:.04em; }
+.admin-topbar p { font-size:.8rem; color:var(--g400); }
+
+@media(max-width:640px){
+  .fg2,.fg3 { grid-template-columns:1fr; }
+  .f.s2,.f.s3 { grid-column:span 1; }
+  .stats-row { grid-template-columns:1fr 1fr; }
+  .nb { padding:10px 13px; font-size:.76rem; }
+  .logo-block { padding:10px 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr">
+    <div class="logo-block">
+      <svg class="logo-svg" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="44" height="44" rx="6" fill="#D0021B"/>
+        <path d="M8 28C8 20 14 13 22 13C30 13 36 20 36 28" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <rect x="6" y="27" width="32" height="5" rx="2.5" fill="white"/>
+        <path d="M16 27V22M22 27V20M28 27V22" stroke="#D0021B" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="22" cy="37" r="2" fill="white"/>
+      </svg>
+      <div class="brand">
+        <span class="brand-name">RABOTEC</span>
+        <span class="brand-sub">Mining · Engineering · Construction</span>
+      </div>
+    </div>
+    <div class="hdr-title">
+      <span>SafeReport</span>
+      <span class="red-badge">HSE</span>
+    </div>
+    <div class="hdr-status">
+      <div class="dot" id="conn-dot"></div>
+      <span class="dot-label" id="conn-lbl">Online</span>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav>
+  <div class="nav" id="nav-inner">
+    <button class="nb active" onclick="showTab('report',this)">
+      ＋ New Report
+    </button>
+    <button class="nb" onclick="showTab('my-reports',this)">
+      My Reports <span class="nbadge" id="my-count">0</span>
+    </button>
+  </div>
+</nav>
+
+<div id="toast"></div>
+
+<main>
+
+  <!-- OUTBOX BANNER -->
+  <div id="outbox-banner">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91A16 16 0 0015.09 17.91l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 18v2.92"/></svg>
+    <span id="outbox-text">0 report(s) queued — will sync when back online</span>
+    <button class="sync-btn" onclick="syncOutbox()">Retry Now</button>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       TAB: NEW REPORT
+  ══════════════════════════════════════ -->
+  <div id="tab-report" class="tab active">
+
+    <!-- Incident Details -->
+    <div class="card">
+      <div class="card-hdr">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+        <h2>Incident Details</h2>
+      </div>
+      <div class="card-body">
+        <div class="fg fg3">
+          <div class="f">
+            <label>Department <span class="req">*</span></label>
+            <select id="f-dept">
+              <option value="">— Select —</option>
+              <option>Mining Operations</option>
+              <option>Engineering</option>
+              <option>Construction</option>
+              <option>Maintenance</option>
+              <option>Processing Plant</option>
+              <option>Logistics &amp; Transport</option>
+              <option>Environmental &amp; Safety</option>
+              <option>Administration</option>
+            </select>
+          </div>
+          <div class="f">
+            <label>Work Area / Location <span class="req">*</span></label>
+            <input id="f-area" type="text" placeholder="e.g. Shaft 3, Site B-12">
+          </div>
+          <div class="f">
+            <label>Shift</label>
+            <select id="f-shift">
+              <option value="">— Select —</option>
+              <option>Day (06:00–18:00)</option>
+              <option>Night (18:00–06:00)</option>
+              <option>Morning (06:00–14:00)</option>
+              <option>Afternoon (14:00–22:00)</option>
+            </select>
+          </div>
+          <div class="f">
+            <label>Date of Incident <span class="req">*</span></label>
+            <input id="f-date" type="date">
+          </div>
+          <div class="f">
+            <label>Time of Incident</label>
+            <input id="f-time" type="time">
+          </div>
+          <div class="f">
+            <label>Severity <span class="req">*</span></label>
+            <div class="sev-group">
+              <input type="radio" name="sev" id="sl" value="Low"      class="sev-radio">
+              <label for="sl" class="sev-lbl">Low</label>
+              <input type="radio" name="sev" id="sm" value="Medium"   class="sev-radio">
+              <label for="sm" class="sev-lbl">Medium</label>
+              <input type="radio" name="sev" id="sh" value="High"     class="sev-radio">
+              <label for="sh" class="sev-lbl">High</label>
+              <input type="radio" name="sev" id="sc" value="Critical" class="sev-radio">
+              <label for="sc" class="sev-lbl">Critical</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hazard Classification -->
+    <div class="card">
+      <div class="card-hdr">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <h2>Hazard Classification</h2>
+      </div>
+      <div class="card-body">
+        <div class="f">
+          <label>Hazard Type(s) <span class="req">*</span></label>
+          <div class="hz-group" id="hz-group">
+            <input type="checkbox" id="hz1"  value="Fall from Height"             class="hz-cb"><label for="hz1"  class="hz-lbl">Fall from Height</label>
+            <input type="checkbox" id="hz2"  value="Struck by Object"             class="hz-cb"><label for="hz2"  class="hz-lbl">Struck by Object</label>
+            <input type="checkbox" id="hz3"  value="Entrapment"                   class="hz-cb"><label for="hz3"  class="hz-lbl">Entrapment</label>
+            <input type="checkbox" id="hz4"  value="Electrical"                   class="hz-cb"><label for="hz4"  class="hz-lbl">Electrical</label>
+            <input type="checkbox" id="hz5"  value="Chemical / Hazardous Substance" class="hz-cb"><label for="hz5"  class="hz-lbl">Chemical / Hazardous Substance</label>
+            <input type="checkbox" id="hz6"  value="Fire / Explosion"             class="hz-cb"><label for="hz6"  class="hz-lbl">Fire / Explosion</label>
+            <input type="checkbox" id="hz7"  value="Equipment Failure"            class="hz-cb"><label for="hz7"  class="hz-lbl">Equipment Failure</label>
+            <input type="checkbox" id="hz8"  value="Ergonomic / Manual Handling"  class="hz-cb"><label for="hz8"  class="hz-lbl">Ergonomic / Manual Handling</label>
+            <input type="checkbox" id="hz9"  value="Environmental"                class="hz-cb"><label for="hz9"  class="hz-lbl">Environmental</label>
+            <input type="checkbox" id="hz10" value="Other"                        class="hz-cb"><label for="hz10" class="hz-lbl">Other</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description & Actions -->
+    <div class="card">
+      <div class="card-hdr">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <h2>Description &amp; Actions</h2>
+      </div>
+      <div class="card-body">
+        <div class="fg fg1">
+          <div class="f">
+            <label>Hazard / Incident Description <span class="req">*</span></label>
+            <textarea id="f-desc" rows="4" placeholder="Describe what happened, what you observed, and any relevant context…"></textarea>
+          </div>
+          <div class="f">
+            <label>Conditions at the Time</label>
+            <textarea id="f-cond" rows="3" placeholder="Weather, lighting, equipment state, personnel involved…"></textarea>
+          </div>
+          <div class="f">
+            <label>Immediate Actions Taken</label>
+            <textarea id="f-acts" rows="3" placeholder="What was done immediately to address or contain the hazard…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observer Details -->
+    <div class="card">
+      <div class="card-hdr">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <h2>Observer Details</h2>
+      </div>
+      <div class="card-body">
+        <div class="fg fg2">
+          <div class="f">
+            <label>Observer Name <span class="req">*</span></label>
+            <input id="f-name" type="text" placeholder="Full name">
+          </div>
+          <div class="f">
+            <label>Employee / Badge No.</label>
+            <input id="f-badge" type="text" placeholder="e.g. RBT-1042">
+          </div>
+          <div class="f">
+            <label>Contact / Phone</label>
+            <input id="f-phone" type="tel" placeholder="+233 …">
+          </div>
+          <div class="f">
+            <label>Supervisor Notified?</label>
+            <select id="f-sup">
+              <option value="">— Select —</option>
+              <option>Yes — immediately</option>
+              <option>Yes — within 1 hour</option>
+              <option>Not yet</option>
+              <option>N/A</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="submitReport()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Submit Report
+      </button>
+      <button class="btn btn-ghost" onclick="clearForm(true)">Clear Form</button>
+      <span id="submit-status"></span>
+    </div>
+
+  </div><!-- /tab-report -->
+
+  <!-- ══════════════════════════════════════
+       TAB: MY REPORTS
+  ══════════════════════════════════════ -->
+  <div id="tab-my-reports" class="tab">
+    <div class="card">
+      <div class="card-hdr">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <h2>My Submitted Reports</h2>
+      </div>
+      <div class="card-body" id="my-reports-body">
+        <div class="empty">
+          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p>No reports submitted yet in this session.</p>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tab-my-reports -->
+
+  <!-- ══════════════════════════════════════
+       TAB: ADMIN  (only via ?view=admin)
+  ══════════════════════════════════════ -->
+  <div id="tab-admin" class="tab">
+
+    <!-- Login -->
+    <div id="admin-login" class="login-wrap">
+      <div class="login-card">
+        <div class="login-hdr">
+          <svg width="40" height="40" fill="none" stroke="white" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:auto"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <h2>Admin Access</h2>
+          <p>SafeReport Management Portal</p>
+        </div>
+        <div class="login-body">
+          <div class="f">
+            <label>Password</label>
+            <input id="admin-pw" type="password" placeholder="Enter admin password"
+              onkeydown="if(event.key==='Enter')doLogin()">
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign In</button>
+          <p id="login-err" style="color:var(--red);font-size:.82rem;margin-top:10px;display:none">
+            Incorrect password. Please try again.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="admin-dash" style="display:none">
+      <div class="admin-topbar">
+        <div>
+          <h2>Reports Dashboard</h2>
+          <p>Rabotec HSE — SafeReport Management</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="loadAdminReports()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="adminLogout()">Sign Out</button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total</div></div>
+        <div class="stat red"><div class="stat-num" id="s-crit">—</div><div class="stat-lbl">Critical</div></div>
+        <div class="stat"><div class="stat-num" id="s-open">—</div><div class="stat-lbl">Open</div></div>
+        <div class="stat"><div class="stat-num" id="s-res">—</div><div class="stat-lbl">Resolved</div></div>
+      </div>
+
+      <div class="filter-row">
+        <input  type="text" id="f-search" placeholder="Search…" oninput="renderAdmin()">
+        <select id="f-fsev"    onchange="renderAdmin()">
+          <option value="">All Severities</option>
+          <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+        </select>
+        <select id="f-fstat"   onchange="renderAdmin()">
+          <option value="">All Statuses</option>
+          <option>Open</option><option>In Progress</option><option>Resolved</option><option>Closed</option>
+        </select>
+        <select id="f-fdept"   onchange="renderAdmin()">
+          <option value="">All Departments</option>
+          <option>Mining Operations</option><option>Engineering</option><option>Construction</option>
+          <option>Maintenance</option><option>Processing Plant</option><option>Logistics &amp; Transport</option>
+          <option>Environmental &amp; Safety</option><option>Administration</option>
+        </select>
+      </div>
+
+      <div id="admin-list">
+        <div class="loading"><div class="spin"></div> Loading…</div>
+      </div>
+    </div>
+
+  </div><!-- /tab-admin -->
+
+</main>
+
+<script>
+'use strict';
+// ─────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────
+const GAS_URL   = 'https://script.google.com/macros/s/AKfycbyh2TxmvFXA6dv4u38Unsp-prlSffG1-xMGzpS8d8QPzd2NIzU11QE-i-TM1PF1E4eg/exec';
+const ADMIN_PW  = 'admin123';
+const OUTBOX_KEY = 'rabotec_sr_outbox';
+
+// ─────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────
+let online        = navigator.onLine;
+let adminAuthed   = false;
+let adminRecords  = [];
+let sessionReports = [];
+let submitting    = false;  // prevent double-click duplicate
+
+// ─────────────────────────────────────────
+//  CONNECTIVITY
+// ─────────────────────────────────────────
+function updateConn() {
+  online = navigator.onLine;
+  document.getElementById('conn-dot').className = 'dot' + (online ? '' : ' off');
+  document.getElementById('conn-lbl').textContent = online ? 'Online' : 'Offline';
+  renderOutboxBanner();
+  if (online) syncOutbox();
+}
+window.addEventListener('online',  updateConn);
+window.addEventListener('offline', updateConn);
+setInterval(updateConn, 20000);
+updateConn();
+
+// ─────────────────────────────────────────
+//  OUTBOX
+// ─────────────────────────────────────────
+function getOutbox() {
+  try { return JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]'); } catch { return []; }
+}
+function saveOutbox(b) { localStorage.setItem(OUTBOX_KEY, JSON.stringify(b)); }
+
+function addToOutbox(r) {
+  const b = getOutbox();
+  // don't add if id already in outbox
+  if (!b.find(x => x.id === r.id)) { b.push(r); saveOutbox(b); }
+  renderOutboxBanner();
+}
+
+function renderOutboxBanner() {
+  const b = getOutbox();
+  const el = document.getElementById('outbox-banner');
+  if (b.length > 0) {
+    el.classList.add('show');
+    document.getElementById('outbox-text').textContent =
+      `${b.length} report(s) queued — will sync when back online`;
+  } else {
+    el.classList.remove('show');
+  }
+}
+
+async function syncOutbox() {
+  if (!online) return;
+  const box = getOutbox();
+  if (!box.length) return;
+  const failed = [];
+  for (const r of box) {
+    const ok = await gasPost(r);
+    if (!ok) failed.push(r);
+  }
+  saveOutbox(failed);
+  renderOutboxBanner();
+  const synced = box.length - failed.length;
+  if (synced > 0) toast(`${synced} queued report(s) synced successfully`, 'success');
+}
+setInterval(syncOutbox, 60000);
+renderOutboxBanner();
+
+// ─────────────────────────────────────────
+//  GAS FETCH (no-cors for POST)
+// ─────────────────────────────────────────
+async function gasPost(payload) {
+  try {
+    await fetch(GAS_URL, {
+      method:  'POST',
+      mode:    'no-cors',           // GAS redirects — no-cors handles it
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify(payload)
+    });
+    return true;                    // no exception = success
+  } catch {
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// Inject admin tab if ?view=admin
+window.addEventListener('DOMContentLoaded', () => {
+  if (new URLSearchParams(window.location.search).get('view') === 'admin') {
+    const nav = document.getElementById('nav-inner');
+    const btn = document.createElement('button');
+    btn.className = 'nb';
+    btn.innerHTML = '🔒 Admin';
+    btn.onclick = () => showTab('admin', btn);
+    nav.appendChild(btn);
+  }
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  updateMyCount();
+});
+
+// ─────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────
+function toast(msg, type = 'info', ms = 4500) {
+  const c = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = `tmsg ${type}`;
+  el.innerHTML = `<span>${{success:'✓',error:'✕',warning:'⚠',info:'ℹ'}[type]||'ℹ'}</span><span>${msg}</span>`;
+  c.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'tOut .3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, ms);
+}
+
+// ─────────────────────────────────────────
+//  FORM — COLLECT
+// ─────────────────────────────────────────
+function collect() {
+  const hazards = [...document.querySelectorAll('#hz-group .hz-cb:checked')].map(c => c.value);
+  return {
+    id:                'RPT-' + Date.now(),
+    timestamp:         new Date().toISOString(),
+    department:        document.getElementById('f-dept').value,
+    workArea:          document.getElementById('f-area').value,
+    incidentDate:      document.getElementById('f-date').value,
+    incidentTime:      document.getElementById('f-time').value,
+    shift:             document.getElementById('f-shift').value,
+    severity:          document.querySelector('input[name="sev"]:checked')?.value || '',
+    hazardTypes:       hazards.join(', '),
+    description:       document.getElementById('f-desc').value.trim(),
+    conditions:        document.getElementById('f-cond').value.trim(),
+    actionsTaken:      document.getElementById('f-acts').value.trim(),
+    observerName:      document.getElementById('f-name').value.trim(),
+    badgeNo:           document.getElementById('f-badge').value.trim(),
+    contact:           document.getElementById('f-phone').value.trim(),
+    supervisorNotified:document.getElementById('f-sup').value,
+    status:            'Open'
+  };
+}
+
+function validate(d) {
+  if (!d.department)   { toast('Department is required',              'error'); return false; }
+  if (!d.workArea)     { toast('Work Area / Location is required',    'error'); return false; }
+  if (!d.incidentDate) { toast('Date of Incident is required',        'error'); return false; }
+  if (!d.severity)     { toast('Please select a Severity level',      'error'); return false; }
+  if (!d.hazardTypes)  { toast('Select at least one Hazard Type',     'error'); return false; }
+  if (!d.description)  { toast('Hazard Description is required',      'error'); return false; }
+  if (!d.observerName) { toast('Observer Name is required',           'error'); return false; }
+  return true;
+}
+
+// ─────────────────────────────────────────
+//  SUBMIT
+// ─────────────────────────────────────────
+async function submitReport() {
+  if (submitting) return;          // block double-tap
+  const data = collect();
+  if (!validate(data)) return;
+
+  submitting = true;
+  const btn = document.querySelector('.btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  const statusEl = document.getElementById('submit-status');
+  statusEl.textContent = '';
+
+  // store locally first (session display)
+  sessionReports.push(data);
+  updateMyCount();
+  renderMyReports();
+  clearForm(false);
+
+  if (online) {
+    const ok = await gasPost(data);
+    if (ok) {
+      toast('Report submitted successfully!', 'success');
+      statusEl.textContent = '✓ Submitted to server';
+    } else {
+      // GAS unreachable — queue
+      addToOutbox(data);
+      toast('Could not reach server — saved to outbox', 'warning');
+      statusEl.textContent = '⚡ Queued (server unreachable)';
+    }
+  } else {
+    addToOutbox(data);
+    toast('You are offline — report saved to outbox', 'warning');
+    statusEl.textContent = '⚡ Queued offline';
+  }
+
+  submitting = false;
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Submit Report';
+  setTimeout(() => { statusEl.textContent = ''; }, 7000);
+}
+
+function clearForm(notify) {
+  ['f-dept','f-area','f-shift','f-time','f-desc','f-cond','f-acts','f-name','f-badge','f-phone','f-sup']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[name="sev"]').forEach(r => r.checked = false);
+  document.querySelectorAll('#hz-group .hz-cb').forEach(c => c.checked = false);
+  if (notify) toast('Form cleared', 'info', 2000);
+}
+
+// ─────────────────────────────────────────
+//  MY REPORTS (session)
+// ─────────────────────────────────────────
+function updateMyCount() {
+  document.getElementById('my-count').textContent = sessionReports.length;
+}
+function renderMyReports() {
+  const c = document.getElementById('my-reports-body');
+  if (!sessionReports.length) {
+    c.innerHTML = `<div class="empty"><svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No reports submitted yet in this session.</p></div>`;
+    return;
+  }
+  c.innerHTML = [...sessionReports].reverse().map(r => recCard(r, false)).join('');
+}
+
+// ─────────────────────────────────────────
+//  ADMIN
+// ─────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  const err = document.getElementById('login-err');
+  if (pw === ADMIN_PW) {
+    adminAuthed = true;
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-dash').style.display  = 'block';
+    err.style.display = 'none';
+    loadAdminReports();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('admin-pw').value = '';
+  }
+}
+
+function adminLogout() {
+  adminAuthed = false; adminRecords = [];
+  document.getElementById('admin-login').style.display = 'block';
+  document.getElementById('admin-dash').style.display  = 'none';
+  document.getElementById('admin-pw').value = '';
+}
+
+async function loadAdminReports() {
+  if (!adminAuthed) return;
+  document.getElementById('admin-list').innerHTML =
+    '<div class="loading"><div class="spin"></div> Loading reports…</div>';
+  try {
+    const res  = await fetch(GAS_URL + '?action=getAll');
+    const data = await res.json();
+    adminRecords = Array.isArray(data) ? data : (data.records || []);
+    renderAdminStats();
+    renderAdmin();
+  } catch {
+    document.getElementById('admin-list').innerHTML =
+      `<div class="empty" style="color:var(--red)">⚠ Failed to load. Check GAS deployment.</div>`;
+    toast('Could not reach server', 'error');
+  }
+}
+
+function renderAdminStats() {
+  document.getElementById('s-total').textContent = adminRecords.length;
+  document.getElementById('s-crit').textContent  = adminRecords.filter(r => r.severity === 'Critical').length;
+  document.getElementById('s-open').textContent  = adminRecords.filter(r => r.status   === 'Open').length;
+  document.getElementById('s-res').textContent   = adminRecords.filter(r => r.status   === 'Resolved').length;
+}
+
+function renderAdmin() {
+  const q    = document.getElementById('f-search').value.toLowerCase();
+  const sev  = document.getElementById('f-fsev').value;
+  const stat = document.getElementById('f-fstat').value;
+  const dept = document.getElementById('f-fdept').value;
+  const list = adminRecords.filter(r => {
+    if (sev  && r.severity   !== sev)  return false;
+    if (stat && r.status     !== stat) return false;
+    if (dept && r.department !== dept) return false;
+    if (q && !JSON.stringify(r).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const c = document.getElementById('admin-list');
+  if (!list.length) { c.innerHTML = `<div class="empty"><p>No reports match your filters.</p></div>`; return; }
+  c.innerHTML = list.map(r => recCard(r, true)).join('');
+}
+
+// ─────────────────────────────────────────
+//  RECORD CARD
+// ─────────────────────────────────────────
+function recCard(r, isAdmin) {
+  const sev = (r.severity || '').toLowerCase();
+  const st  = r.status || 'Open';
+  const stc = st.toLowerCase().replace(/\s+/g, '-');
+  const ts  = r.timestamp ? new Date(r.timestamp).toLocaleString() : (r.incidentDate || '');
+  return `
+<div class="rec" id="card-${r.id}">
+  <div class="rec-hdr">
+    <span class="sev-badge ${sev}">${r.severity || 'N/A'}</span>
+    <span class="rec-id">#${r.id || 'DRAFT'}</span>
+    ${isAdmin ? `<span class="sc ${stc}">${st}</span>` : ''}
+    <span class="rec-ts">${ts}</span>
+  </div>
+  <div class="rec-body">
+    <div class="rf"><span class="rf-lbl">Department</span><span>${r.department  || '—'}</span></div>
+    <div class="rf"><span class="rf-lbl">Work Area</span><span>${r.workArea     || '—'}</span></div>
+    <div class="rf"><span class="rf-lbl">Hazard Type(s)</span><span>${r.hazardTypes || '—'}</span></div>
+    <div class="rf"><span class="rf-lbl">Description</span><span>${r.description  || '—'}</span></div>
+    ${r.actionsTaken ? `<div class="rf"><span class="rf-lbl">Actions Taken</span><span>${r.actionsTaken}</span></div>` : ''}
+    <div class="rf"><span class="rf-lbl">Observer</span><span>${r.observerName || '—'}${r.badgeNo ? ' ('+r.badgeNo+')' : ''}</span></div>
+  </div>
+  ${isAdmin ? `
+  <div class="rec-actions">
+    <select class="status-sel" onchange="updateStatus('${r.id}',this.value)">
+      <option ${st==='Open'        ?'selected':''}>Open</option>
+      <option ${st==='In Progress' ?'selected':''}>In Progress</option>
+      <option ${st==='Resolved'    ?'selected':''}>Resolved</option>
+      <option ${st==='Closed'      ?'selected':''}>Closed</option>
+    </select>
+    <button class="btn btn-danger btn-sm" onclick="deleteRec('${r.id}')">Delete</button>
+  </div>` : ''}
+</div>`;
+}
+
+// ─────────────────────────────────────────
+//  ADMIN ACTIONS
+// ─────────────────────────────────────────
+async function updateStatus(id, status) {
+  try {
+    await fetch(GAS_URL, {
+      method:  'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify({ action: 'updateStatus', id, status })
+    });
+    const r = adminRecords.find(x => x.id === id);
+    if (r) r.status = status;
+    renderAdminStats(); renderAdmin();
+    toast(`Status set to "${status}"`, 'success');
+  } catch {
+    toast('Network error — status not saved', 'error');
+  }
+}
+
+async function deleteRec(id) {
+  if (!confirm('Delete this report permanently?')) return;
+  try {
+    await fetch(GAS_URL, {
+      method:  'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify({ action: 'deleteRow', id })
+    });
+    adminRecords = adminRecords.filter(r => r.id !== id);
+    renderAdminStats(); renderAdmin();
+    toast('Report deleted', 'success');
+  } catch {
+    toast('Network error — report not deleted', 'error');
+  }
+}
+</script>
+</body>
+</html>
